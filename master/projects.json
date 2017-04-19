@@ -1,12 +1,9 @@
 {
   "projects": {
     "doutriaux1/mpas-dummy": {
-      "bot-key": "*****",
-      "api-key": "*****",
+      "github_webhook_secret": "secretkey",
       "github-events": ["push"],
-      "slaves" : ["http://localhost:9982/slave"],
-      "token": "*****",
-      "logs_dir": "logs"
+      "wiki_path" : "/Users/doutriaux1/git/mpas-dummy.wiki"
     }
   }
 }
