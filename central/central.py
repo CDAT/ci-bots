@@ -22,7 +22,6 @@ _projects_file = os.path.join(os.path.dirname(__file__), 'projects.json')
 with open(_projects_file) as f:
     projects = json.load(f)['projects']
 
-
 def authenticate(key, body, received):
     """Authenticate an event from github."""
     computed = hmac.new(str(key), body, hashlib.sha1).hexdigest()
@@ -109,7 +108,7 @@ def post(*arg, **kwarg):
         return 'Unknown project'
 
     # make sure this is a valid request coming from github
-    if not authenticate(project.get('api-key', ''), body, received):
+    if not authenticate(project.get('github_webhook_secret', ''), body, received):
         tangelo.http_status(403, "Invalid signature")
         return 'Invalid signature'
 
@@ -118,29 +117,81 @@ def post(*arg, **kwarg):
 
     if project['github-events'] == '*' or event in project['github-events']:
         obj['event'] = event
-        try:
-          commit = obj["head_commit"]
-          is_commit = True
-        except:
-          commit = obj["pull_request"]
-          is_commit = False
-        print "commit was:",commit
-        update_wiki_commit(project["wiki_path"],commit)
+        if event == "push":
+            process_push(obj)
+        elif event == "gollum":
+            process_wiki(obj)
     else:
         tangelo.http_status(200, "Unhandled event")
         return 'Unhandled event'
+def process_push(obj):
+    try:
+      commit = obj["head_commit"]
+      is_commit = True
+    except:
+      commit = obj["pull_request"]
+      is_commit = False
+    update_wiki_commit(project["wiki_path"],commit)
 
+def process_wiki(obj):
+    pages = obj["pages"]
+    print "PROCESSING WIKI"
+    project_name = obj.get('repository', {}).get('full_name')
+    print "project name:",project_name
+    project = get_project(project_name)
+    for page in pages:
+        if page["page_name"]+".md" == project["wiki_testers_page"]:
+            headers = {}
+            #headers = {"Authorization":"token %s" % project["github_status_token"]}
+            process_command("git pull",project["wiki_path"])
+            with open(os.path.join(project["wiki_path"],project["wiki_testers_page"])) as f:
+                lines = f.readlines()
+                processed = []
+                for line in lines[2:]:
+                    sp = line.split()
+                    commit_id = sp[0]
+                    tester = sp[1]
+                    state = sp[2]
+                    if not (commit_id,tester) in processed:
+                       data = {
+                               "state": state,
+                               "target_url": "%s/wiki/%s/%s" % (obj["repository"]["html_url"],tester,commit_id),
+                               "description": "%s test" % tester,
+                               "context": "cont-int/%s" % tester
+                               }
+                       print "psoting:",data
+                       print "posting to:",obj["repository"]["statuses_url"].replace("{sha}",commit_id)
+                       resp = requests.post(
+                               obj["repository"]["statuses_url"].replace("{sha}",commit_id),
+                               data = json.dumps(data),
+                               verify = False,
+                               headers = headers)
+                       print "POSTED A",state,"event response was:",resp.status_code
+                    processed.append((commit_id,tester))
+
+    return
+
+
+def process_command(cmd,path):
+    p = subprocess.Popen(shlex.split(cmd),cwd=path)
+    p.communicate()
+    return p.returncode
 
 def update_wiki_commit(path,commit):
     fnm = os.path.join(path,"COMMITS.md")
     with open(fnm) as f:
         commits = f.readlines()[:50]
-        commits.insert(1,"%s %s %s" % (commit["id"],commit["author"]["username"],commit["message"].split("\n")[0][:25]))
+        commits.insert(2,"%s %s %s\n" % (commit["id"],commit["author"]["username"],commit["message"].split("\n")[0][:25]))
+    # Make sure last line closes pre block
+    if commits[-1]!="```":
+        commits.append("```")
+    lst = "".join(commits)
+
     f=open(fnm,"w")
-    f.write("\n".join(commits))
+    f.write("".join(commits))
     f.close()
-    subprocess.call(shlex.split("git commit -am 'updated list of commit'"))
-    subprocess.call(shlex.split("git push"))
+    process_command("git commit -am 'updated list of commit'",path)
+    process_command("git push",path)
 
 
 if __name__ == "__main__":

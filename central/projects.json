@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "doutriaux1/mpas-dummy": {
+      "github_webhook_secret": "secretkey",
+      "github_status_token": "****",
+      "github-events": ["push","gollum"],
+      "wiki_path" : "/Users/doutriaux1/git/mpas-dummy.wiki",
+      "wiki_commits_page": "COMMITS.md",
+      "wiki_testers_page": "TESTERS.md"
+    }
+  }
+}
