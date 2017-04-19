@@ -75,15 +75,12 @@ def get(*arg, **kwarg):
 def post(*arg, **kwarg):
     """Listen for github webhooks, authenticate, and forward to buildbot."""
     # retrieve the headers from the request
-    print "MASTER RECEIVED A POST EVENT"
+    print "MASTER RECEIVED A POST EVENT",args,kargs
     # print "TGELO CONFI",tangelo.cherrypy.request.header_list
     try:
         received = tangelo.request_header('X-Hub-Signature')[5:]
     except Exception:
-        try:
-            received = tangelo.request_header('BOT-Signature')[5:]
-        except Exception:
-            received = ''
+        received = ''
 
     # get the request body as a dict
     # for json
@@ -98,6 +95,7 @@ def post(*arg, **kwarg):
     # obj = json.loads(kwarg['payload'])
     #open('last.json', 'w').write(json.dumps(obj, indent=2))
     project_name = obj.get('repository', {}).get('full_name')
+    print "project name:",project_name
     project = get_project(project_name)
     if project is None:
         tangelo.http_status(400, "Unknown project")

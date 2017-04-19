@@ -1,6 +1,6 @@
 {
   "projects": {
-    "UV-CDAT/uvcdat": {
+    "doutriaux1/mpas-dummy": {
       "bot-key": "*****",
       "api-key": "*****",
       "github-events": ["push"],
