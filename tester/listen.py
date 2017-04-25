@@ -33,7 +33,25 @@ def process_command(cmd,path,verbose=False,log=None):
 def add_commit_status(project,commit_id,status):
     process_command("git pull",project["wiki_path"])
     testers_page = project.get("wiki_testers_page","TESTERS.md")
-    with open(os.path.join(project["wiki_path"],testers_page)) as f:
+    testers_page_pth = os.path.join(project["wiki_path"],project["tester_id"],testers_page)
+    headers = project.get("wiki_testers_header_lines",2)
+    if not os.path.exists(testers_page_pth):
+        if not os.path.exists(os.path.dirname(testers_page_pth)):
+            os.makedirs(os.path.dirname(testers_page_pth))
+        with open(testers_page_pth,"w") as f:
+            if headers == 1:
+                n = 0
+            elif headers > 1:
+                print>>f, "Lists of commits tested\n"
+                n = 1
+            while n<headers-1:
+                f.write("\n")
+            f.write( "```\n")
+            f.write( "```")
+
+        process_command("git add %s" % testers_page_pth,project["wiki_path"])
+
+    with open(testers_page_pth) as f:
         lines = f.readlines()[:project.get("wiki_backlog",256)]
         lines.insert(project.get("wiki_testers_header_lines",2),"%s %s %s %s\n" % (commit_id,project["tester_id"],status,time.asctime()))
 
