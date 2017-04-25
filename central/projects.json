@@ -1,6 +1,5 @@
 {
-  "projects": {
-    "doutriaux1/mpas-dummy": {
+  "doutriaux1/mpas-dummy": {
       "github_webhook_secret": "secretkey",
       "github_status_token": "*********",
       "github-events": ["push","gollum"],
@@ -8,8 +7,7 @@
       "wiki_commits_page": "COMMITS.md",
       "wiki_commits_header_lines":2,
       "wiki_commits_backlog":50,
-      "wiki_testers_page": "TESTERS.md"
+      "wiki_testers_page": "TESTERS.md",
       "wiki_testers_header_lines":2
-    }
   }
 }

@@ -15,13 +15,6 @@ import subprocess
 import shlex
 
 
-# load a projects file
-# see https://developer.github.com/webhooks/#events
-
-_projects_file = os.path.join(os.path.dirname(__file__), 'projects.json')
-with open(_projects_file) as f:
-    projects = json.load(f)['projects']
-
 def authenticate(key, body, received):
     """Authenticate an event from github."""
     computed = hmac.new(str(key), body, hashlib.sha1).hexdigest()
@@ -135,7 +128,7 @@ def process_wiki(obj):
     headers = {"Authorization":"token %s" % project["github_status_token"]}
     testers_page = project.get("wiki_testers_page","TESTERS.md")
     for page in pages:
-        if page["page_name"]+".md" == testers_page
+        if page["page_name"]+".md" == testers_page:
             process_command("git pull",project["wiki_path"])
             with open(os.path.join(project["wiki_path"],testers_page)) as f:
                 lines = f.readlines()
@@ -162,7 +155,7 @@ def process_wiki(obj):
     return
 
 
-def process_command(cmd,path):
+def process_command(cmd,path=os.getcwd()):
     p = subprocess.Popen(shlex.split(cmd),cwd=path)
     p.communicate()
     return p.returncode
@@ -184,3 +177,21 @@ def update_wiki_commit(project,path,commit):
     process_command("git commit -am 'updated list of commit'",path)
     process_command("git push",path)
 
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description='Starts a tangelo server to listen to github webhook')
+    parser.add_argument("-p","--project-file",default=os.path.join(os.path.dirname(__file__), 'projects.json'),help="path to JSON projects file")
+    parser.add_argument("-P","--port",default=60010,type=int,help="port to listen webhook on")
+    parser.add_argument("-H","--hostname",default=os.uname()[1],help="hostname")
+
+    args=parser.parse_args()
+
+    # load a projects file
+    # see https://developer.github.com/webhooks/#events
+    _projects_file = os.path.join(args.project_file)
+    with open(_projects_file) as f:
+        projects = json.load(f)
+
+    cmd = "tangelo -r %s --hostname %s --port=%i" % (os.path.dirname(__file__),args.hostname,args.port)
+    process_command(cmd)
