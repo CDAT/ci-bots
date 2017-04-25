@@ -39,20 +39,25 @@ def add_commit_status(project,commit_id,status):
         if not os.path.exists(os.path.dirname(testers_page_pth)):
             os.makedirs(os.path.dirname(testers_page_pth))
         with open(testers_page_pth,"w") as f:
+            print "CREATED:",headers,f
             if headers == 1:
                 n = 0
             elif headers > 1:
-                print>>f, "Lists of commits tested\n"
+                f.write("Lists of commits tested\n")
                 n = 1
             while n<headers-1:
                 f.write("\n")
+                n = n + 1
+
             f.write( "```\n")
             f.write( "```")
+            f.close()
 
         process_command("git add %s" % testers_page_pth,project["wiki_path"])
 
     with open(testers_page_pth) as f:
         lines = f.readlines()[:headers+project.get("wiki_backlog",256)]
+        print "LINRES:",lines
         lines.insert(headers,"%s %s %s %s\n" % (commit_id,project["tester_id"],status,time.asctime()))
 
     if lines[-1]!="```":
