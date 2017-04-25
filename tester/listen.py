@@ -52,8 +52,8 @@ def add_commit_status(project,commit_id,status):
         process_command("git add %s" % testers_page_pth,project["wiki_path"])
 
     with open(testers_page_pth) as f:
-        lines = f.readlines()[:project.get("wiki_backlog",256)]
-        lines.insert(project.get("wiki_testers_header_lines",2),"%s %s %s %s\n" % (commit_id,project["tester_id"],status,time.asctime()))
+        lines = f.readlines()[:headers+project.get("wiki_backlog",256)]
+        lines.insert(headers,"%s %s %s %s\n" % (commit_id,project["tester_id"],status,time.asctime()))
 
     if lines[-1]!="```":
         lines.append("```")
