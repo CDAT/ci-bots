@@ -43,7 +43,7 @@ def add_commit_status(project,commit_id,status):
     with open(os.path.join(project["wiki_path"],testers_page),"w") as f:
         f.write(page)
     process_command("git commit -am '%s a commit'" % status,project["wiki_path"])
-    process_command("git push",project["wiki_path"])
+    process_command("git push",project["wiki_path"],verbose=True)
 
 
 def test_commit(project,commit_id):
@@ -56,7 +56,10 @@ def test_commit(project,commit_id):
     if not os.path.exists(os.path.join(project["wiki_path"],project["tester_id"])):
         os.makedirs(os.path.join(project["wiki_path"],project["tester_id"]))
     ret = process_command(project["test_command"],project["test_execute_directory"],verbose=True, log=logfile)
+    process_command("git pull",project["wiki_path"])
     process_command("git add %s" % logfile,project["wiki_path"],verbose=True)
+    if verbose:
+        print "COMMAND TESTING RETURNED",ret,"------------------------------------"
     if ret == 0:
         add_commit_status(project,commit_id,"success")
     else:
@@ -80,7 +83,7 @@ def check_project(name):
             print "CHECKING FOR COMMIT:",commit_id
         if not (name, commit_id) in commits_tested:
             if verbose:
-                print "\tUNTESTED!"
+                print "\tNOT TESTED"
             commits_tested.insert(0,(name, commit_id))
             if first_pass.get(name,True) is False:
                 if project["simultaneous_tests"]:
@@ -91,7 +94,7 @@ def check_project(name):
                     test_commit(project,commit_id)
             else:
                 if verbose:
-                    print "\tBUT SKIPPED BECUAE OF FIRST PASS"
+                    print "\tBUT SKIPPED BECAUSE THIS IS THE FIRST PASS"
         else:
             if verbose:
                 print "\tAlready tested"
