@@ -43,7 +43,7 @@ def add_commit_status(project,commit_id,status):
     with open(os.path.join(project["wiki_path"],testers_page),"w") as f:
         f.write(page)
     process_command("git commit -am '%s a commit'" % status,project["wiki_path"])
-    process_command("git push",project["wiki_path"],verbose=True)
+    process_command("git push --force",project["wiki_path"],verbose=True)
 
 
 def test_commit(project,commit_id):
