@@ -8,7 +8,11 @@ import os
 import argparse
 import sys
 
-def process_command(cmd,path):
+first_pass = {}
+
+def process_command(cmd,path,verbose=False):
+    if verbose:
+        print "Running",cmd
     p = subprocess.Popen(shlex.split(cmd),cwd=path,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     p.communicate()
     return p.returncode
@@ -30,10 +34,11 @@ def add_commit_status(project,commit_id,status):
 
 
 def test_commit(project,commit_id):
+    print "TESTING COMMIT:",commit_id
     add_commit_status(project,commit_id,"pending")
     process_command("git fetch",project["source_path"])
     process_command("git checkout %s" % commit_id,project["source_path"])
-    ret = process_command(project["test_command"],project["test_execute_directory"])
+    ret = process_command(project["test_command"],project["test_execute_directory"],verbose=True)
     if ret == 0:
         add_commit_status(project,commit_id,"success")
     else:
@@ -49,17 +54,20 @@ def check_project(name):
         commit_id = l.split()[0]
         if not (name, commit_id) in commits_tested:
             commits_tested.insert(0,(name, commit_id))
-            if project["simultaneous_tests"]:
-                kargs = {"target":test_commit,"args":(project,commit_id)}
-                t = threading.Thread(**kargs)
-                t.start()
-            else:
-                test_commit(project,commit_id)
+            if first_pass.get(name,True) is False:
+                if project["simultaneous_tests"]:
+                    kargs = {"target":test_commit,"args":(project,commit_id)}
+                    t = threading.Thread(**kargs)
+                    t.start()
+                else:
+                    test_commit(project,commit_id)
+
+    first_pass[name] = False
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Listens for requested CI')
     parser.add_argument("-f","--frequency",help="Frequency at which to check for new ommits to test",type=int,default=5)
-    parser.add_argument("-p","--project-file",default="tester/project.json",help="path to JSON projects file")
+    parser.add_argument("-p","--project-file",default=os.path.join(os.path.dirname(__file__), 'projects.json'),help="path to JSON projects file")
     args=parser.parse_args()
 
     commits_tested = []
@@ -69,5 +77,7 @@ if __name__ == "__main__":
 
     while True:
         for p in projects.keys():
-            check_project(p)
+            kargs = {"target":check_project,"args":(p,)}
+            t = threading.Thread(**kargs)
+            t.start()
         time.sleep(args.frequency)

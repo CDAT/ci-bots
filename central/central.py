@@ -14,6 +14,10 @@ import time
 import subprocess
 import shlex
 
+_projects_file = os.environ.get("PROJECTS_FILE")
+if _projects_file is not None:
+    with open(_projects_file) as f:
+        projects = json.load(f)
 
 def authenticate(key, body, received):
     """Authenticate an event from github."""
@@ -28,6 +32,8 @@ def authenticate(key, body, received):
 
 def get_project(name):
     """Return the object from `projects` matching `name` or None."""
+    global projects
+    print "AHHHHHHHH:",projects
     return projects.get(name)
 
 
@@ -155,13 +161,16 @@ def process_wiki(obj):
     return
 
 
-def process_command(cmd,path=os.getcwd()):
-    p = subprocess.Popen(shlex.split(cmd),cwd=path)
+def process_command(cmd,path=os.getcwd(),verbose=False, env=os.environ):
+    if verbose:
+        print "Running",cmd
+    p = subprocess.Popen(shlex.split(cmd),cwd=path,env=env)
     p.communicate()
     return p.returncode
 
-def update_wiki_commit(project,path,commit):
-    fnm = os.path.join(project["wiki_path"],project.get("wiki_commits_page","COMMITS.md"))
+def update_wiki_commit(project,commit):
+    path = project["wiki_path"]
+    fnm = os.path.join(path,project.get("wiki_commits_page","COMMITS.md"))
     backlog = project.get("wiki_commits_backlog",50)
     with open(fnm) as f:
         commits = f.readlines()[:backlog]
@@ -190,8 +199,8 @@ if __name__ == "__main__":
     # load a projects file
     # see https://developer.github.com/webhooks/#events
     _projects_file = os.path.join(args.project_file)
-    with open(_projects_file) as f:
-        projects = json.load(f)
+    myenv = os.environ
+    myenv["PROJECTS_FILE"]=_projects_file
 
     cmd = "tangelo -r %s --hostname %s --port=%i" % (os.path.dirname(__file__),args.hostname,args.port)
-    process_command(cmd)
+    process_command(cmd,env = myenv)
