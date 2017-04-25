@@ -32,8 +32,8 @@ def process_command(cmd,path,verbose=False,log=None):
 
 def add_commit_status(project,commit_id,status):
     process_command("git pull",project["wiki_path"])
-    testers_page = project.get("wiki_testers_page","TESTERS.md")
-    testers_page_pth = os.path.join(project["wiki_path"],project["tester_id"],testers_page)
+    testers_page = "%s.%s" % (project["tester_id"],project.get("wiki_testers_page","TESTERS.md"))
+    testers_page_pth = os.path.join(project["wiki_path"],testers_page)
     headers = project.get("wiki_testers_header_lines",2)
     if not os.path.exists(testers_page_pth):
         if not os.path.exists(os.path.dirname(testers_page_pth)):

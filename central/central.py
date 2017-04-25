@@ -134,9 +134,9 @@ def process_wiki(obj):
     headers = {"Authorization":"token %s" % project["github_status_token"]}
     testers_page = project.get("wiki_testers_page","TESTERS.md")
     for page in pages:
-        if page["page_name"]+".md" == testers_page:
+        if page["page_name"]+".md".find(testers_page)>-1:
             process_command("git pull",project["wiki_path"])
-            with open(os.path.join(project["wiki_path"],testers_page)) as f:
+            with open(os.path.join(project["wiki_path"],page["page_name"]PPP"md")) as f:
                 lines = f.readlines()
                 processed = []
                 for line in lines[project.get("wiki_testers_header_lines",2):-1]:
