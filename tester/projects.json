@@ -8,7 +8,7 @@
       "wiki_testers_header_lines":2,
       "wiki_backlog": 100,
       "commits_backlog": 1,
-      "test_command" : "ls -l",
+      "test_command" : "sleep 10",
       "test_execute_directory": "/Users/doutriaux1",
       "source_path": "/Users/doutriaux1/git/mpas-dummy",
       "simultaneous_tests": false
