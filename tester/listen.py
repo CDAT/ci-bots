@@ -55,8 +55,11 @@ def test_commit(project,commit_id):
     logfile = os.path.join(project["wiki_path"],project["tester_id"],commit_id)
     if not os.path.exists(os.path.join(project["wiki_path"],project["tester_id"])):
         os.makedirs(os.path.join(project["wiki_path"],project["tester_id"]))
+    process_command("git pull",project["wiki_path"])
+    process_command("git reset --hard origin/master",project["wiki_path"])
     ret = process_command(project["test_command"],project["test_execute_directory"],verbose=True, log=logfile)
     process_command("git pull",project["wiki_path"])
+    process_command("git reset --hard origin/master",project["wiki_path"])
     process_command("git add %s" % logfile,project["wiki_path"],verbose=True)
     if verbose:
         print "COMMAND TESTING RETURNED",ret,"------------------------------------"
