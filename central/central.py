@@ -168,6 +168,7 @@ def process_command(cmd,path=os.getcwd(),verbose=False, env=os.environ):
     return p.returncode
 
 def update_wiki_commit(project,commit):
+    process_command("git pull",path)
     path = project["wiki_path"]
     fnm = os.path.join(path,project.get("wiki_commits_page","COMMITS.md"))
     backlog = project.get("wiki_commits_backlog",50)

@@ -31,7 +31,8 @@ def process_command(cmd,path,verbose=False,log=None):
     return p.returncode
 
 def add_commit_status(project,commit_id,status):
-    process_command("git pull",project["wiki_path"])
+    #process_command("git pull",project["wiki_path"])
+    #process_command("git reset --hard origin/master",project["wiki_path"])
     testers_page = "%s.%s" % (project["tester_id"],project.get("wiki_testers_page","TESTERS.md"))
     testers_page_pth = os.path.join(project["wiki_path"],testers_page)
     headers = project.get("wiki_testers_header_lines",2)
@@ -72,14 +73,15 @@ def add_commit_status(project,commit_id,status):
 def test_commit(project,commit_id):
     if verbose:
         print "\tTESTING COMMIT:",commit_id
+    process_command("git pull",project["wiki_path"])
+    process_command("git reset --hard origin/master",project["wiki_path"])
     add_commit_status(project,commit_id,"pending")
     process_command("git fetch",project["source_path"])
+    #process_command("git reset --hard origin/master",project["source_path"])
     process_command("git checkout %s" % commit_id,project["source_path"])
     logfile = os.path.join(project["wiki_path"],project["tester_id"],commit_id)
     if not os.path.exists(os.path.join(project["wiki_path"],project["tester_id"])):
         os.makedirs(os.path.join(project["wiki_path"],project["tester_id"]))
-    process_command("git pull",project["wiki_path"])
-    process_command("git reset --hard origin/master",project["wiki_path"])
     ret = process_command(project["test_command"],project["test_execute_directory"],verbose=True, log=logfile)
     process_command("git pull",project["wiki_path"])
     process_command("git reset --hard origin/master",project["wiki_path"])
