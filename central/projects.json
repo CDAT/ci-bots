@@ -1,7 +1,7 @@
 {
   "doutriaux1/mpas-dummy": {
       "github_webhook_secret": "secretkey",
-      "github_status_token": "4e413d63bd44448df2b80031df0ac098febadabe",
+      "github_status_token": "96cf09875ea4e58ccc500b3adbc91cec0a80e2a8",
       "github-events": ["push","gollum"],
       "wiki_path" : "/Users/doutriaux1/git/mpas-dummy.wiki",
       "wiki_commits_page": "COMMITS.md",

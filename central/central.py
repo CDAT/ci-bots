@@ -127,13 +127,16 @@ def process_push(obj):
     update_wiki_commit(project,commit)
 
 def process_wiki(obj):
+    print "WE ARE PROCESSING WIKI PAGE "
     pages = obj["pages"]
     project_name = obj.get('repository', {}).get('full_name')
     project = get_project(project_name)
     headers = {"Authorization":"token %s" % project["github_status_token"]}
     testers_page = project.get("wiki_testers_page","TESTERS.md")
     for page in pages:
+        print "PAGE:",page
         if (page["page_name"]+".md").find(testers_page)>-1:
+            print "MATCHING OR PATTERN"
             process_command("git pull",project["wiki_path"])
             with open(os.path.join(project["wiki_path"],page["page_name"]+".md")) as f:
                 lines = f.readlines()
@@ -144,6 +147,7 @@ def process_wiki(obj):
                     tester = sp[1]
                     state = sp[2]
                     if not (commit_id,tester) in processed:
+                       print "COMMIT:",commit_id,tester,state
                        data = {
                                "state": state,
                                "target_url": "%s/wiki/%s/%s" % (obj["repository"]["html_url"],tester,commit_id),
@@ -155,6 +159,7 @@ def process_wiki(obj):
                                data = json.dumps(data),
                                verify = False,
                                headers = headers)
+                       print "RESPONSE:",resp
                     processed.append((commit_id,tester))
 
     return
@@ -162,7 +167,7 @@ def process_wiki(obj):
 
 def process_command(cmd,path=os.getcwd(),verbose=True, env=os.environ):
     if verbose:
-        print "Running",cmd,"in",cmd
+        print "Running",cmd,"in",path
     p = subprocess.Popen(shlex.split(cmd),cwd=path,env=env)
     p.communicate()
     return p.returncode
@@ -173,6 +178,7 @@ def update_wiki_commit(project,commit):
     fnm = os.path.join(path,project.get("wiki_commits_page","COMMITS.md"))
     backlog = project.get("wiki_commits_backlog",50)
     with open(fnm) as f:
+        print "WE ARE READING COMMIT IN:",fnm
         commits = f.readlines()[:backlog]
         commits.insert(2,"%s %s %s %s\n" % (commit["id"],commit["author"]["username"],time.asctime(),commit["message"].split("\n")[0][:25]))
     # Make sure last line closes pre block
@@ -180,7 +186,8 @@ def update_wiki_commit(project,commit):
         commits.append("```")
     lst = "".join(commits)
 
-    f=open(fnm,"w")
+    print "NOWWRITINGCOMMITS IN:",fnm
+    f=open(fnm,"w") 
     f.write("".join(commits))
     f.close()
     process_command("git commit -am 'updated list of commit'",path)
