@@ -54,7 +54,7 @@ def add_commit_status(project,commit_id,status):
             f.write( "```")
             f.close()
 
-        process_command("git add %s" % testers_page_pth,project["wiki_path"])
+        process_command("git add %s" % testers_page,project["wiki_path"])
         process_command("git commit -am 'adding tester file'",project["wiki_path"])
 
     with open(testers_page_pth) as f:
@@ -80,10 +80,11 @@ def test_commit(project,commit_id):
     process_command("git fetch",project["source_path"])
     #process_command("git reset --hard origin/master",project["source_path"])
     process_command("git checkout %s" % commit_id,project["source_path"])
-    logfile = os.path.join(project["wiki_path"],project["tester_id"],commit_id)
+    logfile = os.path.join(project["tester_id"],commit_id)
+    logfile_pth = os.path.join(project["wiki_path"],project["tester_id"],commit_id)
     if not os.path.exists(os.path.join(project["wiki_path"],project["tester_id"])):
         os.makedirs(os.path.join(project["wiki_path"],project["tester_id"]))
-    ret = process_command(project["test_command"],project["test_execute_directory"],verbose=True, log=logfile)
+    ret = process_command(project["test_command"],project["test_execute_directory"],verbose=True, log=logfile_pth)
     process_command("git pull",project["wiki_path"])
     process_command("git reset --hard origin/master",project["wiki_path"])
     process_command("git add %s" % logfile,project["wiki_path"],verbose=True)
