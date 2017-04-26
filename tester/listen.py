@@ -11,9 +11,9 @@ import sys
 first_pass = {}
 verbose = False
 
-def process_command(cmd,path,verbose=False,log=None):
+def process_command(cmd,path,verbose=True,log=None):
     if verbose:
-        print "Running",cmd
+        print "Running",cmd,"innn",cmd
     if log is None:
         out = subprocess.PIPE
     else:
@@ -55,6 +55,7 @@ def add_commit_status(project,commit_id,status):
             f.close()
 
         process_command("git add %s" % testers_page_pth,project["wiki_path"])
+        process_command("git commit -am 'adding tester file'",project["wiki_path"])
 
     with open(testers_page_pth) as f:
         lines = f.readlines()[:headers+project.get("wiki_backlog",256)]

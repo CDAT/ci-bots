@@ -160,16 +160,16 @@ def process_wiki(obj):
     return
 
 
-def process_command(cmd,path=os.getcwd(),verbose=False, env=os.environ):
+def process_command(cmd,path=os.getcwd(),verbose=True, env=os.environ):
     if verbose:
-        print "Running",cmd
+        print "Running",cmd,"in",cmd
     p = subprocess.Popen(shlex.split(cmd),cwd=path,env=env)
     p.communicate()
     return p.returncode
 
 def update_wiki_commit(project,commit):
-    process_command("git pull",path)
     path = project["wiki_path"]
+    process_command("git pull",path)
     fnm = os.path.join(path,project.get("wiki_commits_page","COMMITS.md"))
     backlog = project.get("wiki_commits_backlog",50)
     with open(fnm) as f:
