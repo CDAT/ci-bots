@@ -91,8 +91,6 @@ def post(*arg, **kwarg):
         tangelo.http_status(400, "Could not load json object")
         return "Could not load json object"
 
-    # obj = json.loads(kwarg['payload'])
-    #open('last.json', 'w').write(json.dumps(obj, indent=2))
     project_name = obj.get('repository', {}).get('full_name')
     project = get_project(project_name)
     if project is None:
@@ -107,12 +105,12 @@ def post(*arg, **kwarg):
     event = tangelo.request_header('X-Github-Event')
     print "EVENT:",event
 
-    if project['github-events'] == '*' or event in project['github-events']:
+    if project['github-events'] == '*' or event in project.get('github-events',["gollum","push"]):
         obj['event'] = event
         if event == "push":
-            process_push(obj)
+            return process_push(obj)
         elif event == "gollum":
-            process_wiki(obj)
+            return process_wiki(obj)
     else:
         tangelo.http_status(200, "Unhandled event")
         return 'Unhandled event'
@@ -125,10 +123,9 @@ def process_push(obj):
       is_commit = False
     project_name = obj.get('repository', {}).get('full_name')
     project = get_project(project_name)
-    update_wiki_commit(project,commit)
+    return update_wiki_commit(project,commit)
 
 def process_wiki(obj):
-    print "WE ARE PROCESSING WIKI PAGE "
     pages = obj["pages"]
     project_name = obj.get('repository', {}).get('full_name')
     project = get_project(project_name)
@@ -136,9 +133,7 @@ def process_wiki(obj):
     testers_page = project.get("wiki_testers_page","TESTERS.md")
     nheader = project.get("wiki_testers_header_lines",2)
     for page in pages:
-        print "PAGE:",page
         if (page["page_name"]+".md").find(testers_page)>-1:
-            print "MATCHING OR PATTERN"
             process_command("git pull",project["wiki_path"])
             with open(os.path.join(project["wiki_path"],page["page_name"]+".md")) as f:
                 lines = f.readlines()
@@ -147,7 +142,6 @@ def process_wiki(obj):
                    commit_id = sp[0]
                    tester = sp[1]
                    state = sp[2]
-                   print "COMMIT:",commit_id,tester,state
                    data = {
                            "state": state,
                            "target_url": "%s/wiki/%s/%s" % (obj["repository"]["html_url"],tester,commit_id),
@@ -159,9 +153,10 @@ def process_wiki(obj):
                            data = json.dumps(data),
                            verify = False,
                            headers = headers)
-                   print "RESPONSE:",resp
+                   tangelo.http_status(resp.status_code)
+                   return resp.text
 
-    return
+    return "ignored this wiki update"
 
 
 def process_command(cmd,path=os.getcwd(),verbose=True, env=os.environ):
@@ -172,12 +167,13 @@ def process_command(cmd,path=os.getcwd(),verbose=True, env=os.environ):
     return p.returncode
 
 def update_wiki_commit(project,commit):
+    error = 0
     path = project["wiki_path"]
-    process_command("git pull",path)
+    error+=abs( process_command("git pull",path))
     fnm = os.path.join(path,project.get("wiki_commits_page","COMMITS.md"))
     backlog = project.get("wiki_commits_backlog",50)
     with open(fnm) as f:
-        print "WE ARE READING COMMIT IN:",fnm
+        # print "WE ARE READING COMMIT IN:",fnm
         commits = f.readlines()[:backlog]
         commits.insert(2,"%s %s %s %s\n" % (commit["id"],commit["author"]["username"],time.asctime(),commit["message"].split("\n")[0][:25]))
     # Make sure last line closes pre block
@@ -185,12 +181,17 @@ def update_wiki_commit(project,commit):
         commits.append("```")
     lst = "".join(commits)
 
-    print "NOWWRITINGCOMMITS IN:",fnm
     f=open(fnm,"w") 
     f.write("".join(commits))
     f.close()
-    process_command("git commit -am 'updated list of commit'",path)
-    process_command("git push",path)
+    error += abs(process_command("git commit -am 'updated list of commit'",path))
+    error += abs(process_command("git push",path))
+    if error == 0:
+        tangelo.http_status(200)
+        return "Commit_id %s successfuly pushed to wiki" % commit["id"]
+    else:
+        tangelo.http_status(500)
+        return "Unexpected error pushing the commit to wiki"
 
 
 if __name__ == "__main__":

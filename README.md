@@ -74,7 +74,8 @@ contains the following information:
 Where: 
 * `github_webhook_secret` is the secret key you setup for the webhook on github
 * `github_status_token` is your personal github token
-* `github-events` the github events you want to listen to
+* `github-events` the github events you want to listen to (defaults to
+  ["push","gollum"])
 * `wiki_path` the local path on your machine where you cloned your repo's wiki
   ( `git clone git@github.com:user/repo.wiki` )
 * `wiki_commits_page` is the name of the on your wiki where you want to write
@@ -92,15 +93,25 @@ Where:
 
 When that is done, install the requirements listed in [central/requirements.txt](central/requirements.txt)
 and run
+
 ```
 python /pth/to/this/repo/central/central.py --port=10060
 --hostname=myserver.com 
 ```
-to start the service at `http://myserver.com:10060/central`.  When the service is running, you can test the connection by a get request
+
+to start the service at `http://myserver.com:10060/central`.
+When the service is running, you can test the connection by a get request
+
 ```
 $ curl http://myserver.com:9981
 How can I help you?
 ```
+
+You can obtain more help by typing:
+```
+python /pth/to/this/repo/central/central.py -h
+```
+
 
 Tester machines setup
 ---------------------
@@ -156,7 +167,14 @@ Where:
   to false)
 When that is done, install the requirements listed in [tester/requirements.txt](tester/requirements.txt)
 and run
+
 ```
 python /pth/to/this/repo/tester/listen.py -f 30
 ```
+
 to start the service and check for new commits every 30 seconds
+You can obtain more help by typing:
+```
+python /pth/to/this/repo/central/central.py -h
+```
+
