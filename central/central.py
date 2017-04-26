@@ -15,6 +15,7 @@ import subprocess
 import shlex
 
 _projects_file = os.environ.get("PROJECTS_FILE")
+
 if _projects_file is not None:
     with open(_projects_file) as f:
         projects = json.load(f)
@@ -133,6 +134,7 @@ def process_wiki(obj):
     project = get_project(project_name)
     headers = {"Authorization":"token %s" % project["github_status_token"]}
     testers_page = project.get("wiki_testers_page","TESTERS.md")
+    nheader = project.get("wiki_testers_header_lines",2)
     for page in pages:
         print "PAGE:",page
         if (page["page_name"]+".md").find(testers_page)>-1:
@@ -140,27 +142,24 @@ def process_wiki(obj):
             process_command("git pull",project["wiki_path"])
             with open(os.path.join(project["wiki_path"],page["page_name"]+".md")) as f:
                 lines = f.readlines()
-                processed = []
-                for line in lines[project.get("wiki_testers_header_lines",2):-1]:
-                    sp = line.split()
-                    commit_id = sp[0]
-                    tester = sp[1]
-                    state = sp[2]
-                    if not (commit_id,tester) in processed:
-                       print "COMMIT:",commit_id,tester,state
-                       data = {
-                               "state": state,
-                               "target_url": "%s/wiki/%s/%s" % (obj["repository"]["html_url"],tester,commit_id),
-                               "description": "%s test" % tester,
-                               "context": "cont-int/%s" % tester
-                               }
-                       resp = requests.post(
-                               obj["repository"]["statuses_url"].replace("{sha}",commit_id),
-                               data = json.dumps(data),
-                               verify = False,
-                               headers = headers)
-                       print "RESPONSE:",resp
-                    processed.append((commit_id,tester))
+                for line in lines[nheader:nheader+1]:
+                   sp = line.split()
+                   commit_id = sp[0]
+                   tester = sp[1]
+                   state = sp[2]
+                   print "COMMIT:",commit_id,tester,state
+                   data = {
+                           "state": state,
+                           "target_url": "%s/wiki/%s/%s" % (obj["repository"]["html_url"],tester,commit_id),
+                           "description": "%s test" % tester,
+                           "context": "cont-int/%s" % tester
+                           }
+                   resp = requests.post(
+                           obj["repository"]["statuses_url"].replace("{sha}",commit_id),
+                           data = json.dumps(data),
+                           verify = False,
+                           headers = headers)
+                   print "RESPONSE:",resp
 
     return
 
