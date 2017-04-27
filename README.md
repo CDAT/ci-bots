@@ -77,7 +77,7 @@ Where:
 * `github-events` the github events you want to listen to (defaults to
   ["push","gollum"])
 * `wiki_path` the local path on your machine where you cloned your repo's wiki
-  ( `git clone git@github.com:user/repo.wiki` )
+  ( `git clone git@github.com:user/repo.wiki` ) repo must be writable
 * `wiki_commits_page` is the name of the on your wiki where you want to write
   the list of commits to deal with (default to COMMITS>md if not set)
 * `wiki_commits_header_lines` number of headers lines in the above page
@@ -145,7 +145,7 @@ Where:
 * `tester_id` is a unique identifier that will appear in the github status and
   representing the test machine id
 * `wiki_path` the local path on your machine where you cloned your repo's wiki
-  ( `git clone git@github.com:user/repo.wiki` )
+  ( `git clone git@github.com:user/repo.wiki` ) repo mustbe writable
 * `wiki_commits_page` is the name of the on your wiki where the central
   machines write the list of commits to deal with (default to COMMITS>md if not set)
 * `wiki_commits_header_lines` number of headers lines in the above page

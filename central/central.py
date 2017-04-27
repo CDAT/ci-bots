@@ -170,12 +170,33 @@ def update_wiki_commit(project,commit):
     error = 0
     path = project["wiki_path"]
     error+=abs( process_command("git pull",path))
+
     fnm = os.path.join(path,project.get("wiki_commits_page","COMMITS.md"))
+    headers = project.get("wiki_commit_headers",2)
+    if not os.path.exists(fnm):
+        with open(fnm,"w") as f:
+            print "CREATED:",headers,f
+            if headers == 1:
+                n = 0
+            elif headers > 1:
+                f.write("Lists of commits tested\n")
+                n = 1
+            while n<headers-1:
+                f.write("\n")
+                n = n + 1
+
+            f.write( "```\n")
+            f.write( "```")
+            f.close()
+
+        process_command("git add %s" % project.get("wiki_commits_page","COMMITS.md"),project["wiki_path"])
+        process_command("git commit -am 'adding commit file'",project["wiki_path"])
+
     backlog = project.get("wiki_commits_backlog",50)
     with open(fnm) as f:
         # print "WE ARE READING COMMIT IN:",fnm
         commits = f.readlines()[:backlog]
-        commits.insert(2,"%s %s %s %s\n" % (commit["id"],commit["author"]["username"],time.asctime(),commit["message"].split("\n")[0][:25]))
+        commits.insert(headers,"%s %s %s %s\n" % (commit["id"],commit["author"]["username"],time.asctime(),commit["message"].split("\n")[0][:25]))
     # Make sure last line closes pre block
     if commits[-1]!="```":
         commits.append("```")
