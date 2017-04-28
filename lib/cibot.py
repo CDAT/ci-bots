@@ -23,7 +23,11 @@ def process_command(cmd,path=os.getcwd(),verbose=True):
         print "\t\tRETURN CODE:",p.returncode
     return p.returncode, o
 
-def write_to_wiki(project,commit_id,log,verbose=True):
+def write_log_to_wiki(project,commit_id,log,verbose=True):
+    """ At the moment only git supported"""
+    return write_log_to_git_wiki(project,commit_id,log,verbose)
+
+def write_log_to_git_wiki(project,commit_id,log,verbose=True):
     logfile = os.path.join(project["tester_id"],commit_id)
     logfile_pth = os.path.join(project["wiki_path"],project["tester_id"],commit_id)
     if not os.path.exists(os.path.join(project["wiki_path"],project["tester_id"])):
@@ -42,28 +46,51 @@ def write_to_wiki(project,commit_id,log,verbose=True):
             print "returned:",ret
         if ret == 0: # Pushed successfully getting out
             failed = False
+        print "Failed:",failed
+
+def write_to_log(project,commit_id,log,verbose=True):
+    if project.has_key("wiki_path"):
+        write_log_to_wiki(project,commit_id,log,verbose=verbose)
+    elif verbose:
+        print "No where to write log to!"
+        print "Dumping to screen"
+        print "------------- BEGIN LOG -----------"
+        print log
+        print "-------------  END  LOG -----------"
 
 def test_commit(project,commit_id,verbose=True):
     if verbose:
         print "\tTESTING COMMIT:",commit_id
-    add_commit_status(project,commit_id,"pending")
-    process_command("git fetch",project["source_path"])
-    process_command("git checkout %s" % commit_id,project["source_path"])
+    add_commit_status(project,commit_id,"pending",verbose)
+    process_command("git fetch",project["source_path"],verbose)
+    process_command("git checkout %s" % commit_id,project["source_path"],verbose)
     ret,log = process_command(project["test_command"],project["test_execute_directory"],verbose=verbose)
 
-    write_to_wiki(project,commit_id,log,verbose=verbose)
+    write_to_log(project,commit_id,log,verbose)
 
     if verbose:
         print "COMMAND TESTING RETURNED",ret,"------------------------------------"
     if ret == 0:
-        add_commit_status(project,commit_id,"success")
+        add_commit_status(project,commit_id,"success",verbose)
     else:
-        add_commit_status(project,commit_id,"failure")
+        add_commit_status(project,commit_id,"failure",verbose)
+    return ret,log
 
-def add_commit_status(project,commit_id,state):
+def add_commit_status(project,commit_id,state,verbose=True):
+    if project.has_key("github_status_token"):
+        return add_github_commit_status(project,commit_id,state,verbose)
+    elif verbose:
+        print "No where to write statuses to!"
+        print "Dumping to screen"
+        print "------------- BEGIN LOG -----------"
+        print commit_id,state
+        print "-------------  END  LOG -----------"
+        return 0
+
+def add_github_commit_status(project,commit_id,state,verbose=True):
    tester = project["tester_id"]
-   statuses_url = "https://api.github.com/repos/%s/statuses/%s" % (project["github_repo"],commit_id)
-   target_url = "https://github.com/%s/wiki" % project["github_repo"]
+   statuses_url = "https://api.github.com/repos/%s/statuses/%s" % (project["repo_handle"],commit_id)
+   target_url = "https://github.com/%s/wiki" % project["repo_handle"]
    headers = {"Authorization":"token %s" % project["github_status_token"]}
    data = {
            "state": state,
@@ -79,21 +106,21 @@ def add_commit_status(project,commit_id,state):
    return resp
 
 def get_commits(project,verbose=True):
-    process_command("git pull",project["source_path"])
+    process_command("git fetch",project["source_path"],verbose)
     n = project.get("commits_backlog",5)
     if verbose:
         print "Checking the last %i commits" % n
-    ret, log = process_command("git rev-list --remotes -n %i" % n,project["source_path"])
-    commits = log.split("\n")
+    ret, log = process_command("git rev-list --remotes -n %i" % n,project["source_path"],verbose)
+    commits = log.split()
     return commits
 
 commits_tested = []
 first_pass = {}
 
-def check_project(project,verbose=True):
-    name = project["github_repo"]
+def check_project(project,no_test_on_startup=True,verbose=True):
+    name = project["repo_handle"]
     if verbose:
-        print "Checking:",project["github_repo"]
+        print "Checking:",name
     commits = get_commits(project,verbose)
     for commit_id  in commits:
         if verbose:
@@ -102,7 +129,7 @@ def check_project(project,verbose=True):
             if verbose:
                 print "\tNOT TESTED"
             commits_tested.insert(0,(name, commit_id))
-            if first_pass.get(name,True) is False:
+            if first_pass.get(name,no_test_on_startup) is False:
                 if project["simultaneous_tests"]:
                     kargs = {"target":test_commit,"args":(project,commit_id), "kwargs":{"verbose":verbose}}
                     t = threading.Thread(**kargs)
