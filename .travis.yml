@@ -3,6 +3,7 @@ os:
     - linux
 sudo: false
 script:
+- pip install nose
 - python setup.py install
 - python run_tests.py -v2 
 after_success:
