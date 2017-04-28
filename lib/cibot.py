@@ -8,34 +8,39 @@ import os
 import argparse
 import sys
 
-def process_command(cmd,path,verbose=True,log=None):
+def process_command(cmd,path=os.getcwd(),verbose=True):
     if verbose:
-        print "Running",cmd,"innn",cmd
-    if log is None:
-        out = subprocess.PIPE
-    else:
-        out = open(log,"w")
+        print "Running",cmd,"in",path
+    out = subprocess.PIPE
+    err = subprocess.STDOUT
     if verbose:
         print "\t\tLOG FILE :",out
-    p = subprocess.Popen(shlex.split(cmd),cwd=path,stdout=out, stderr=out)
-    p.communicate()
+    p = subprocess.Popen(shlex.split(cmd),cwd=path,stdout=out, stderr=err)
+    o,e = p.communicate()
     if verbose:
         print "\t\tCOMMUNICATE DONE"
-    if log is not None:
-        out.close()
     if verbose:
         print "\t\tRETURN CODE:",p.returncode
-    return p.returncode
-def write_to_wiki(project,log):
+    return p.returncode, o
+
+def write_to_wiki(project,log,verbose=True):
     logfile = os.path.join(project["tester_id"],commit_id)
     logfile_pth = os.path.join(project["wiki_path"],project["tester_id"],commit_id)
     if not os.path.exists(os.path.join(project["wiki_path"],project["tester_id"])):
         os.makedirs(os.path.join(project["wiki_path"],project["tester_id"]))
     with open(logfile_pth,"w") as f:
-        wiki = f.readlines()
-
-    with open(logfile_pth,"w") as f:
-    process_command("git add %s" % logfile,project["wiki_path"],verbose=True)
+        f.write(log)
+    
+    failed = True
+    while failed:
+        process_command("git pull",project["wiki_path"])
+        process_command("git reset --hard origin/master",project["wiki_path"])
+        process_command("git add %s" % logfile,project["wiki_path"])
+        ret, log = process_command("git push",project["wiki_path"])
+        if verbose:
+            print "returned:",ret
+        if ret == 0: # Pushed successfully getting out
+            failed = False
 
 def test_commit(project,commit_id,verbose=True):
     if verbose:
@@ -52,20 +57,47 @@ def test_commit(project,commit_id,verbose=True):
     else:
         add_commit_status(project,commit_id,"failure")
 
+def add_commit_status(project,commit_id,state):
+   tester = project["tester_id"]
+   statuses_url = "https://api.github.com/repos/%s/statuses/%s" % (project["github_repo"],commit_id)
+   target_url = "https://github.com/%s/wiki" % project["github_repo"]
+   headers = {"Authorization":"token %s" % project["github_status_token"]}
+   data = {
+           "state": state,
+           "target_url": "%s/%s/%s" % (target_url,tester,commit_id),
+           "description": "%s test" % tester,
+           "context": "cont-int/%s" % tester
+           }
+   resp = requests.post(
+           statuses_url,
+           data = json.dumps(data),
+           verify = False,
+           headers = headers)
+   return resp
+
+def get_commits(project,verbose=True):
+    process_command("git pull",project["source_path"])
+    n = project.get("commits_backlog",5)
+    ret, log = process_command("git log --branches=* -n %i" % n,project["source_path"])
+    commits = []
+    log = log.split("\n")
+    for l in log:
+        sp = l.split()
+        while sp[0]!="commit":
+            continue
+        commits.append(sp[1])
+    return commits
+
 def check_project(name):
     if verbose:
         print "Checking:",name
     project = projects[name]
-    process_command("git pull",project["wiki_path"])
+    project["github_repo"] = name
     fnm = os.path.join(project["wiki_path"], project["wiki_commits_page"])
-    with open(fnm) as f:
-        r = f.read()
-    commits_headers = project.get("wiki_commit_header_lines",2)
-    commits_backlog = project.get("commits_backlog",1)
     if verbose:
         print "CHECKING THE LAST %i commits" % commits_backlog
-    for l in r.split("\n")[commits_headers:commits_headers+commits_backlog]:
-        commit_id = l.split()[0]
+    commits = get_commits(project,verbose)
+    for commit_id  in commits:
         if verbose:
             print "CHECKING FOR COMMIT:",commit_id
         if not (name, commit_id) in commits_tested:
@@ -74,11 +106,11 @@ def check_project(name):
             commits_tested.insert(0,(name, commit_id))
             if first_pass.get(name,True) is False:
                 if project["simultaneous_tests"]:
-                    kargs = {"target":test_commit,"args":(project,commit_id)}
+                    kargs = {"target":test_commit,"args":(project,commit_id), "kwargs":{"verbose":verbose}}
                     t = threading.Thread(**kargs)
                     t.start()
                 else:
-                    test_commit(project,commit_id)
+                    test_commit(project,commit_id, verbose=verbose)
             else:
                 if verbose:
                     print "\tBUT SKIPPED BECAUSE THIS IS THE FIRST PASS"
@@ -88,22 +120,3 @@ def check_project(name):
 
     first_pass[name] = False
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Listens for requested CI')
-    parser.add_argument("-f","--frequency",help="Frequency at which to check for new ommits to test",type=int,default=5)
-    parser.add_argument("-p","--project-file",default=os.path.join(os.path.dirname(__file__), 'projects.json'),help="path to JSON projects file")
-    parser.add_argument("-v","--verbose",default=False,action="store_true",help="Verbose on/off")
-    args=parser.parse_args()
-    verbose = args.verbose
-
-    commits_tested = []
-
-    with open(args.project_file) as project:
-        projects = json.load(project)["projects"]
-
-    while True:
-        for p in projects.keys():
-            kargs = {"target":check_project,"args":(p,)}
-            t = threading.Thread(**kargs)
-            t.start()
-        time.sleep(args.frequency)
