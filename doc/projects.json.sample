@@ -2,15 +2,12 @@
   "projects": {
     "doutriaux1/mpas-dummy": {
       "tester_id" : "LLNL1",
+      "github_status_token": "*****",
+      "source_path": "/Users/doutriaux1/git/mpas-dummy",
       "wiki_path" : "/Users/doutriaux1/git/mpas-dummy.wiki",
-      "wiki_commits_page": "COMMITS.md",
-      "wiki_testers_page": "TESTERS.md",
-      "wiki_testers_header_lines":2,
-      "wiki_backlog": 100,
       "commits_backlog": 1,
       "test_command" : "sleep 10",
       "test_execute_directory": "/Users/doutriaux1",
-      "source_path": "/Users/doutriaux1/git/mpas-dummy",
       "simultaneous_tests": false
     }
   }
