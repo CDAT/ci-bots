@@ -2,11 +2,8 @@ import requests
 import json
 import threading
 import subprocess
-import time
 import shlex
 import os
-import argparse
-import sys
 
 
 def process_command(cmd, path=os.getcwd(), verbose=True):
@@ -59,12 +56,13 @@ def test_commit(project, commit_id, verbose=True):
     process_command("git fetch", project["source_path"])
     process_command("git checkout %s" % commit_id, project["source_path"])
     ret, log = process_command(
-        project["test_command"], project["test_execute_directory"], verbose=verbose)
+        project["test_command"], project["test_execute_directory"],
+        verbose=verbose)
 
     write_to_wiki(project, commit_id, log, verbose=verbose)
 
     if verbose:
-        print "COMMAND TESTING RETURNED", ret, "------------------------------------"
+        print "COMMAND TESTING RETURNED", ret
     if ret == 0:
         add_commit_status(project, commit_id, "success")
     else:
