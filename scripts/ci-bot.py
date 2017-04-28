@@ -4,6 +4,7 @@ import threading
 import cibot
 import json
 import sys
+import time
 
 parser = argparse.ArgumentParser(description='Listens for requested CI',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -18,19 +19,22 @@ args=parser.parse_args()
 with open(args.project_file) as project:
     projects = json.load(project)["projects"]
 
+
+for name in projects.keys():
+    projects[name]["github_repo"]=name
+
 if args.commit is not None:
     repo = args.repo
     if repo is None:
         repo = projects.keys()[0]
     project = projects[repo]
-    project["github_repo"] = repo
     if args.verbose:
         print "Repo:",repo
         print "Testing Commit:",args.commit
     cibot.test_commit(project,args.commit,verbose=args.verbose)
     sys.exit()
 
-repos = projects.keys
+repos = projects.keys()
 
 if args.repo is not None:
     repos = [ args.repo,]

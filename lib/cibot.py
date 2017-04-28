@@ -23,7 +23,7 @@ def process_command(cmd,path=os.getcwd(),verbose=True):
         print "\t\tRETURN CODE:",p.returncode
     return p.returncode, o
 
-def write_to_wiki(project,log,verbose=True):
+def write_to_wiki(project,commit_id,log,verbose=True):
     logfile = os.path.join(project["tester_id"],commit_id)
     logfile_pth = os.path.join(project["wiki_path"],project["tester_id"],commit_id)
     if not os.path.exists(os.path.join(project["wiki_path"],project["tester_id"])):
@@ -36,6 +36,7 @@ def write_to_wiki(project,log,verbose=True):
         process_command("git pull",project["wiki_path"])
         process_command("git reset --hard origin/master",project["wiki_path"])
         process_command("git add %s" % logfile,project["wiki_path"])
+        process_command("git commit -am 'adding log for commit %s'" % commit_id,project["wiki_path"])
         ret, log = process_command("git push",project["wiki_path"])
         if verbose:
             print "returned:",ret
@@ -49,6 +50,8 @@ def test_commit(project,commit_id,verbose=True):
     process_command("git fetch",project["source_path"])
     process_command("git checkout %s" % commit_id,project["source_path"])
     ret,log = process_command(project["test_command"],project["test_execute_directory"],verbose=verbose)
+
+    write_to_wiki(project,commit_id,log,verbose=verbose)
 
     if verbose:
         print "COMMAND TESTING RETURNED",ret,"------------------------------------"
@@ -78,24 +81,19 @@ def add_commit_status(project,commit_id,state):
 def get_commits(project,verbose=True):
     process_command("git pull",project["source_path"])
     n = project.get("commits_backlog",5)
-    ret, log = process_command("git log --branches=* -n %i" % n,project["source_path"])
-    commits = []
-    log = log.split("\n")
-    for l in log:
-        sp = l.split()
-        while sp[0]!="commit":
-            continue
-        commits.append(sp[1])
+    if verbose:
+        print "Checking the last %i commits" % n
+    ret, log = process_command("git rev-list --remotes -n %i" % n,project["source_path"])
+    commits = log.split("\n")
     return commits
 
-def check_project(name):
+commits_tested = []
+first_pass = {}
+
+def check_project(project,verbose=True):
+    name = project["github_repo"]
     if verbose:
-        print "Checking:",name
-    project = projects[name]
-    project["github_repo"] = name
-    fnm = os.path.join(project["wiki_path"], project["wiki_commits_page"])
-    if verbose:
-        print "CHECKING THE LAST %i commits" % commits_backlog
+        print "Checking:",project["github_repo"]
     commits = get_commits(project,verbose)
     for commit_id  in commits:
         if verbose:
