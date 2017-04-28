@@ -14,6 +14,7 @@ parser.add_argument(
     help="Frequency at which to check for new ommits to test",
     type=int,
     default=5)
+parser.add_argument("-t","--test-on-start",action=store_true,default=False,help="Run test on commits at startup")
 parser.add_argument(
     "-p",
     "--project-file",
@@ -43,7 +44,7 @@ with open(args.project_file) as project:
 
 
 for name in projects.keys():
-    projects[name]["github_repo"] = name
+    projects[name]["repo_handle"] = name
 
 if args.commit is not None:
     repo = args.repo
@@ -67,6 +68,7 @@ while True:
         kargs = {
             "target": cibot.check_project, "args": (
                 p,), "kwargs": {
+                "no_test_on_startup": not args.test_on_start,
                 "verbose": args.verbose}}
         t = threading.Thread(**kargs)
         t.start()

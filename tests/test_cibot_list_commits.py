@@ -6,3 +6,6 @@ class CIBOTTest(basecibot.CIBOTTest):
         project  = self.projects["uv-cdat/ci-bots"]
         commits  = cibot.get_commits(project,verbose=False)
         self.assertEqual(len(commits),project["commits_backlog"])
+        project["commits_backlog"] += 6
+        commits  = cibot.get_commits(project,verbose=False)
+        self.assertEqual(len(commits),project["commits_backlog"])
