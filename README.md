@@ -30,13 +30,13 @@ That json file contains the following information:
   "projects": {
     "doutriaux1/mpas-dummy": {
       "tester_id" : "LLNL-LOKI",
-      "github_status_token": "*****"
-      "source_path": "/git/mpas-dummy",
+      "github_status_token" : "*****"
+      "source_path" : "/git/mpas-dummy",
       "wiki_path" : "/git/mpas-dummy.wiki",
-      "commits_backlog": 1,
+      "commits_backlog" : 1,
       "test_command" : "dummy.bash 10",
-      "test_execute_directory": "/Users/doutriaux1",
-      "simultaneous_tests": false
+      "test_execute_directory" : "/Users/doutriaux1",
+      "simultaneous_tests" : false
     }
   }
 }
@@ -56,6 +56,7 @@ Where:
   command from
 * `simultaneous_tests` mutliple commits can be tested at the same time (default
   to false)
+
 When that is done, install the requirements listed in [requirements.txt](requirements.txt)
 
 Install this into your python
