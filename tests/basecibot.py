@@ -10,7 +10,7 @@ class CIBOTTest(unittest.TestCase):
                     "source_path": os.path.join(os.getcwd(),"tests","clone-repo"),
                     "wiki_path": os.path.join(os.getcwd(),"tests","clone-wiki"),
                     "commits_backlog" : 1,
-                    "test_command" : "dummy.bash 3",
+                    "test_command" : "./dummy.bash 3",
                     "test_execute_directory" : os.path.dirname(__file__),
                     "simultaneous_tests" : False
                     }}
