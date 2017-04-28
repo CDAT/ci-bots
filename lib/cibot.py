@@ -8,9 +8,6 @@ import os
 import argparse
 import sys
 
-first_pass = {}
-verbose = False
-
 def process_command(cmd,path,verbose=True,log=None):
     if verbose:
         print "Running",cmd,"innn",cmd
@@ -29,65 +26,25 @@ def process_command(cmd,path,verbose=True,log=None):
     if verbose:
         print "\t\tRETURN CODE:",p.returncode
     return p.returncode
-
-def add_commit_status(project,commit_id,status):
-    #process_command("git pull",project["wiki_path"])
-    #process_command("git reset --hard origin/master",project["wiki_path"])
-    testers_page = "%s.%s" % (project["tester_id"],project.get("wiki_testers_page","TESTERS.md"))
-    testers_page_pth = os.path.join(project["wiki_path"],testers_page)
-    headers = project.get("wiki_testers_header_lines",2)
-    if not os.path.exists(testers_page_pth):
-        if not os.path.exists(os.path.dirname(testers_page_pth)):
-            os.makedirs(os.path.dirname(testers_page_pth))
-        with open(testers_page_pth,"w") as f:
-            print "CREATED:",headers,f
-            if headers == 1:
-                n = 0
-            elif headers > 1:
-                f.write("Lists of commits tested\n")
-                n = 1
-            while n<headers-1:
-                f.write("\n")
-                n = n + 1
-
-            f.write( "```\n")
-            f.write( "```")
-            f.close()
-
-        process_command("git add %s" % testers_page,project["wiki_path"])
-        process_command("git commit -am 'adding tester file'",project["wiki_path"])
-
-    with open(testers_page_pth) as f:
-        lines = f.readlines()[:headers+project.get("wiki_backlog",256)]
-        print "LINRES:",lines
-        lines.insert(headers,"%s %s %s %s\n" % (commit_id,project["tester_id"],status,time.asctime()))
-
-    if lines[-1]!="```":
-        lines.append("```")
-    page = "".join(lines)
-    with open(os.path.join(project["wiki_path"],testers_page),"w") as f:
-        f.write(page)
-    process_command("git commit -am '%s a commit'" % status,project["wiki_path"])
-    process_command("git push --force",project["wiki_path"],verbose=True)
-
-
-def test_commit(project,commit_id):
-    if verbose:
-        print "\tTESTING COMMIT:",commit_id
-    process_command("git pull",project["wiki_path"])
-    process_command("git reset --hard origin/master",project["wiki_path"])
-    add_commit_status(project,commit_id,"pending")
-    process_command("git fetch",project["source_path"])
-    #process_command("git reset --hard origin/master",project["source_path"])
-    process_command("git checkout %s" % commit_id,project["source_path"])
+def write_to_wiki(project,log):
     logfile = os.path.join(project["tester_id"],commit_id)
     logfile_pth = os.path.join(project["wiki_path"],project["tester_id"],commit_id)
     if not os.path.exists(os.path.join(project["wiki_path"],project["tester_id"])):
         os.makedirs(os.path.join(project["wiki_path"],project["tester_id"]))
-    ret = process_command(project["test_command"],project["test_execute_directory"],verbose=True, log=logfile_pth)
-    process_command("git pull",project["wiki_path"])
-    process_command("git reset --hard origin/master",project["wiki_path"])
+    with open(logfile_pth,"w") as f:
+        wiki = f.readlines()
+
+    with open(logfile_pth,"w") as f:
     process_command("git add %s" % logfile,project["wiki_path"],verbose=True)
+
+def test_commit(project,commit_id,verbose=True):
+    if verbose:
+        print "\tTESTING COMMIT:",commit_id
+    add_commit_status(project,commit_id,"pending")
+    process_command("git fetch",project["source_path"])
+    process_command("git checkout %s" % commit_id,project["source_path"])
+    ret,log = process_command(project["test_command"],project["test_execute_directory"],verbose=verbose)
+
     if verbose:
         print "COMMAND TESTING RETURNED",ret,"------------------------------------"
     if ret == 0:
