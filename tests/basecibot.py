@@ -19,8 +19,8 @@ class CIBOTTest(unittest.TestCase):
         if not os.path.exists(os.path.dirname(project["source_path"])):
             os.path.makedirs(os.path.dirname(project["source_path"]))
         if not os.path.exists(project["source_path"]):
-            cibot.process_command("git clone git://github.com/%s clone-repo" % project["github_repo"],os.path.dirname(project["source_path"]),verbose=False)
+            cibot.process_command("git clone git://github.com/%s clone-repo" % project["repo_handle"],os.path.dirname(project["source_path"]),verbose=False)
         if not os.path.exists(project["wiki_path"]):
-            cibot.process_command("git clone git://github.com/%s.wiki clone-wiki" % project["github_repo"],os.path.dirname(project["wiki_path"]),verbose=False)
+            cibot.process_command("git clone git://github.com/%s.wiki clone-wiki" % project["repo_handle"],os.path.dirname(project["wiki_path"]),verbose=False)
 
             
