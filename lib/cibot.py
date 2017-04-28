@@ -90,14 +90,15 @@ def add_commit_status(project, commit_id, state):
 
 
 def get_commits(project, verbose=True):
-    process_command("git pull", project["source_path"])
+    process_command("git pull", project["source_path"], verbose=verbose)
     n = project.get("commits_backlog", 5)
     if verbose:
         print "Checking the last %i commits" % n
     ret, log = process_command(
         "git rev-list --remotes -n %i" %
-        n, project["source_path"])
-    commits = log.split("\n")
+        n, project["source_path"],
+        verbose=verbose)
+    commits = log.split()
     return commits
 
 
