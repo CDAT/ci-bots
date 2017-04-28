@@ -6,7 +6,7 @@ class CIBOTTest(basecibot.CIBOTTest):
     def testCheckProject(self):
         project  = self.projects["uv-cdat/ci-bots"]
         del(project["wiki_path"])
-        project["test_command"] = "dummy.bash 5"
+        project["test_command"] = "./dummy.bash 5"
         project["simultaneous_tests"]=False
         project["commits_backlog"]=2
         commits = cibot.get_commits(project,verbose=False)
