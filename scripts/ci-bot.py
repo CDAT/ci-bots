@@ -14,7 +14,11 @@ parser.add_argument(
     help="Frequency at which to check for new ommits to test",
     type=int,
     default=5)
-parser.add_argument("-t","--test-on-start",action=store_true,default=False,help="Run test on commits at startup")
+parser.add_argument("-t",
+    "--test-on-start",
+    action="store_true",
+    default=False,
+    help="Run test on commits at startup")
 parser.add_argument(
     "-p",
     "--project-file",
