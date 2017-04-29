@@ -10,17 +10,17 @@ import sys
 
 def process_command(cmd,path=os.getcwd(),verbose=True):
     if verbose:
-        print "Running",cmd,"in",path
+        print("Running",cmd,"in",path)
     out = subprocess.PIPE
     err = subprocess.STDOUT
     if verbose:
-        print "\t\tLOG FILE :",out
+        print("\t\tLOG FILE :",out)
     p = subprocess.Popen(shlex.split(cmd),cwd=path,stdout=out, stderr=err)
     o,e = p.communicate()
     if verbose:
-        print "\t\tCOMMUNICATE DONE"
+        print("\t\tCOMMUNICATE DONE")
     if verbose:
-        print "\t\tRETURN CODE:",p.returncode
+        print("\t\tRETURN CODE:",p.returncode)
     return p.returncode, o
 
 def write_log_to_wiki(project,commit_id,log,verbose=True):
@@ -43,24 +43,24 @@ def write_log_to_git_wiki(project,commit_id,log,verbose=True):
         process_command("git commit -am 'adding log for commit %s'" % commit_id,project["wiki_path"])
         ret, log = process_command("git push",project["wiki_path"])
         if verbose:
-            print "returned:",ret
+            print("returned:",ret)
         if ret == 0: # Pushed successfully getting out
             failed = False
-        print "Failed:",failed
+        print("Failed:",failed)
 
 def write_to_log(project,commit_id,log,verbose=True):
-    if project.has_key("wiki_path"):
+    if "wiki_path" in project:
         write_log_to_wiki(project,commit_id,log,verbose=verbose)
     elif verbose:
-        print "No where to write log to!"
-        print "Dumping to screen"
-        print "------------- BEGIN LOG -----------"
-        print log
-        print "-------------  END  LOG -----------"
+        print("No where to write log to!")
+        print("Dumping to screen")
+        print("------------- BEGIN LOG -----------")
+        print(log)
+        print("-------------  END  LOG -----------")
 
 def test_commit(project,commit_id,verbose=True):
     if verbose:
-        print "\tTESTING COMMIT:",commit_id
+        print("\tTESTING COMMIT:",commit_id)
     add_commit_status(project,commit_id,"pending",verbose)
     process_command("git fetch",project["source_path"],verbose)
     process_command("git checkout %s" % commit_id,project["source_path"],verbose)
@@ -69,7 +69,7 @@ def test_commit(project,commit_id,verbose=True):
     write_to_log(project,commit_id,log,verbose)
 
     if verbose:
-        print "COMMAND TESTING RETURNED",ret,"------------------------------------"
+        print("COMMAND TESTING RETURNED",ret,"------------------------------------")
     if ret == 0:
         add_commit_status(project,commit_id,"success",verbose)
     else:
@@ -77,14 +77,14 @@ def test_commit(project,commit_id,verbose=True):
     return ret,log
 
 def add_commit_status(project,commit_id,state,verbose=True):
-    if project.has_key("github_status_token"):
+    if "github_status_token" in project:
         return add_github_commit_status(project,commit_id,state,verbose)
     elif verbose:
-        print "No where to write statuses to!"
-        print "Dumping to screen"
-        print "------------- BEGIN LOG -----------"
-        print commit_id,state
-        print "-------------  END  LOG -----------"
+        print("No where to write statuses to!")
+        print("Dumping to screen")
+        print("------------- BEGIN LOG -----------")
+        print(commit_id,state)
+        print("-------------  END  LOG -----------")
         return 0
 
 def add_github_commit_status(project,commit_id,state,verbose=True):
@@ -109,7 +109,7 @@ def get_commits(project,verbose=True):
     process_command("git fetch",project["source_path"],verbose)
     n = project.get("commits_backlog",5)
     if verbose:
-        print "Checking the last %i commits" % n
+        print("Checking the last %i commits" % n)
     ret, log = process_command("git rev-list --remotes -n %i" % n,project["source_path"],verbose)
     commits = log.split()
     return commits
@@ -120,14 +120,14 @@ first_pass = {}
 def check_project(project,no_test_on_startup=True,verbose=True):
     name = project["repo_handle"]
     if verbose:
-        print "Checking:",name
+        print("Checking:",name)
     commits = get_commits(project,verbose)
     for commit_id  in commits:
         if verbose:
-            print "CHECKING FOR COMMIT:",commit_id
+            print("CHECKING FOR COMMIT:",commit_id)
         if not (name, commit_id) in commits_tested:
             if verbose:
-                print "\tNOT TESTED"
+                print("\tNOT TESTED")
             commits_tested.insert(0,(name, commit_id))
             if first_pass.get(name,no_test_on_startup) is False:
                 if project["simultaneous_tests"]:
@@ -138,10 +138,10 @@ def check_project(project,no_test_on_startup=True,verbose=True):
                     test_commit(project,commit_id, verbose=verbose)
             else:
                 if verbose:
-                    print "\tBUT SKIPPED BECAUSE THIS IS THE FIRST PASS"
+                    print("\tBUT SKIPPED BECAUSE THIS IS THE FIRST PASS")
         else:
             if verbose:
-                print "\tAlready tested"
+                print("\tAlready tested")
 
     first_pass[name] = False
 

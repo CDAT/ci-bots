@@ -14,7 +14,7 @@ class CIBOTTest(basecibot.CIBOTTest):
         cibot.check_project(project,False,verbose=False)
         end = time.time()
         total = end - start
-        print "Total time for 2 commits:",total
+        print("Total time for 2 commits:",total)
         self.assertGreater(total,10)
         self.assertLess(total,12)
         project["simultaneous_tests"]=False
@@ -22,5 +22,5 @@ class CIBOTTest(basecibot.CIBOTTest):
         cibot.check_project(project,False,verbose=False)
         end = time.time()
         total = end - start
-        print "Total time for 2 commits:",total
+        print("Total time for 2 commits:",total)
         self.assertLess(total,5)
