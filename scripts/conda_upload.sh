@@ -10,8 +10,8 @@ else
 fi
 
 export PATH="$HOME/miniconda/bin:$PATH"
-conda install conda-build
 mkdir ~/conda-bld
+cd ~/conda-bld
 conda config --set anaconda_upload no
 export CONDA_BLD_PATH=${HOME}/conda-bld
 echo "Cloning recipes"
