@@ -21,6 +21,16 @@ ssh-add ~/.ssh/id_rsa
 Tester machines setup
 ---------------------
 
+In order to use to push to statuses you will need to create a personal token on
+github
+
+Go into your settings under your profile
+Click on `Personal access token`
+Click on `Generate new token`
+Enter a description in 
+Check the `repo` box
+Copy the token key and put it in the `hithub_status_token` section bellow
+
 The tester setup is fairly easy
 You will need to create json config file in that directory
 That json file contains the following information:
