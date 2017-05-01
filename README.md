@@ -1,17 +1,17 @@
 testbot setup
 ======================
 
-This repository contains all the code necessary to create a new CI service
+This repository contains all the code necessary to create a new CI service.
 At the moment is has support for github statuses and uses github wiki for
-commit test logs
+commit test logs.
 
 ssh agents
 ----------
 
-Central to the system is the ability of the machines to push to github w/o
-human interaction
+Central to the system is the ability of the machines to push to github without
+human interaction.
 
-On Linux machines this can be done via ssh-agent
+On Linux machines this can be done via the ssh-agent:
 
 ```
 eval `ssh-agent `
@@ -31,8 +31,8 @@ Enter a description in
 Check the `repo` box
 Copy the token key and put it in the `hithub_status_token` section bellow
 
-The tester setup is fairly easy
-You will need to create json config file in that directory
+The tester setup is fairly easy.
+You will need to create json config file in the tester directory.
 That json file contains the following information:
 
 ```json
@@ -40,7 +40,7 @@ That json file contains the following information:
   "projects": {
     "doutriaux1/mpas-dummy": {
       "tester_id" : "LLNL-LOKI",
-      "github_status_token" : "*****"
+      "github_status_token" : "*****",
       "source_path" : "/git/mpas-dummy",
       "wiki_path" : "/git/mpas-dummy.wiki",
       "commits_backlog" : 1,
@@ -52,7 +52,7 @@ That json file contains the following information:
 }
 ```
 
-Where: 
+Where:
 * "doutriaux1/mpas-dummy" is the github repo you wish to test
 * `tester_id` is a unique identifier that will appear in the github status and
   representing the test machine id
