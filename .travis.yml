@@ -9,7 +9,7 @@ before_install:
 - bash miniconda.sh -b -p $HOME/miniconda
 - conda config --set always_yes yes --set changeps1 no
 - conda update -y -q conda
-- conda install nose -c conda-forge
+- conda install flake8 nose -c conda-forge
 script:
 - python setup.py install
 - python run_tests.py -v2 

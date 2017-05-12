@@ -65,15 +65,14 @@ if args.update is not None:
         raise RuntimeError("You forgot to pass the commit to update")
     else:
         cibot.write_to_log(projects[repo],args.commit,"FORCED UPDATE",verbose=args.verbose)
-        print(projects[repo])
         cibot.add_commit_status(projects[repo],args.commit,args.update,args.verbose)
         sys.exit()
 
 if args.commit is not None:
     project = projects[repo]
     if args.verbose:
-        print "Repo:", repo
-        print "Testing Commit:", args.commit
+        print("Repo:", repo)
+        print("Testing Commit:", args.commit)
     cibot.test_commit(project, args.commit, verbose=args.verbose)
     sys.exit()
 
