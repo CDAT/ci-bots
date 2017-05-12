@@ -40,6 +40,12 @@ parser.add_argument(
     "--repo",
     default=None,
     help="repo to test, default is first key in project file")
+parser.add_argument(
+    "-u",
+    "--update",
+    default=None,
+    choices=("success","failure","pending"),
+    help="Update commit status")
 
 args = parser.parse_args()
 
@@ -50,10 +56,20 @@ with open(args.project_file) as project:
 for name in projects.keys():
     projects[name]["repo_handle"] = name
 
+repo = args.repo
+if repo is None:
+    repo = projects.keys()[0]
+
+if args.update is not None:
+    if args.commit is None:
+        raise RuntimeError("You forgot to pass the commit to update")
+    else:
+        cibot.write_to_log(projects[repo],args.commit,"FORCED UPDATE",verbose=args.verbose)
+        print(projects[repo])
+        cibot.add_commit_status(projects[repo],args.commit,args.update,args.verbose)
+        sys.exit()
+
 if args.commit is not None:
-    repo = args.repo
-    if repo is None:
-        repo = projects.keys()[0]
     project = projects[repo]
     if args.verbose:
         print "Repo:", repo

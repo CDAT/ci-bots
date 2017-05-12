@@ -32,13 +32,13 @@ def write_log_to_git_wiki(project,commit_id,log,verbose=True):
     logfile_pth = os.path.join(project["wiki_path"],project["tester_id"],commit_id)
     if not os.path.exists(os.path.join(project["wiki_path"],project["tester_id"])):
         os.makedirs(os.path.join(project["wiki_path"],project["tester_id"]))
-    with open(logfile_pth,"w") as f:
-        f.write(log)
     
     failed = True
     while failed:
         process_command("git pull",project["wiki_path"])
         process_command("git reset --hard origin/master",project["wiki_path"])
+        with open(logfile_pth,"w") as f:
+            f.write(log)
         process_command("git add %s" % logfile,project["wiki_path"])
         process_command("git commit -am 'adding log for commit %s'" % commit_id,project["wiki_path"])
         ret, log = process_command("git push",project["wiki_path"])
@@ -76,9 +76,9 @@ def test_commit(project,commit_id,verbose=True):
         add_commit_status(project,commit_id,"failure",verbose)
     return ret,log
 
-def add_commit_status(project,commit_id,state,verbose=True):
+def add_commit_status(project,commit_id,state,verbose=True,context=None):
     if "github_status_token" in project:
-        return add_github_commit_status(project,commit_id,state,verbose)
+        return add_github_commit_status(project,commit_id,state,verbose,context)
     elif verbose:
         print("No where to write statuses to!")
         print("Dumping to screen")
@@ -87,16 +87,18 @@ def add_commit_status(project,commit_id,state,verbose=True):
         print("-------------  END  LOG -----------")
         return 0
 
-def add_github_commit_status(project,commit_id,state,verbose=True):
+def add_github_commit_status(project,commit_id,state,verbose=True,context=None):
    tester = project["tester_id"]
    statuses_url = "https://api.github.com/repos/%s/statuses/%s" % (project["repo_handle"],commit_id)
    target_url = "https://github.com/%s/wiki" % project["repo_handle"]
    headers = {"Authorization":"token %s" % project["github_status_token"]}
+   if context is None:
+       context = "cont-int/%s" % tester
    data = {
            "state": state,
            "target_url": "%s/%s/%s" % (target_url,tester,commit_id),
            "description": "%s test" % tester,
-           "context": "cont-int/%s" % tester
+           "context": context
            }
    resp = requests.post(
            statuses_url,
