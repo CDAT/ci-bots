@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(description='Listens for requested CI',
 parser.add_argument(
     "-f",
     "--frequency",
-    help="Frequency at which to check for new ommits to test",
+    help="Frequency at which to check for new commits to test (in minutes)",
     type=int,
     default=5)
 parser.add_argument("-t",
