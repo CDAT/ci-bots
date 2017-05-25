@@ -1,11 +1,12 @@
-testbot setup
-======================
+
+
+# <img src="https://cloud.githubusercontent.com/assets/4295853/26455216/cd8f3c2a-4126-11e7-9419-590882061f47.png" width="200">  Continous Improvement testbot (CI-bot)
 
 This repository contains all the code necessary to create a new CI service.
 At the moment is has support for github statuses and uses github wiki for
 commit test logs.
 
-ssh agents
+ssh agent setup
 ----------
 
 Central to the system is the ability of the machines to push to github without
@@ -18,7 +19,7 @@ eval `ssh-agent `
 ssh-add ~/.ssh/id_rsa
 ```
 
-Tester machines setup
+Tester machine setup
 ---------------------
 
 In order to use to push to statuses you will need to create a personal token on
